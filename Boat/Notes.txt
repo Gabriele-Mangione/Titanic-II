@@ -1,0 +1,1 @@
+Servo.h and RH Libraries use the same Timer (Timer 1), so I took ServoTimer2.h as a solution.
