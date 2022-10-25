@@ -1,7 +1,7 @@
 
 #include <RFM69.h>
 #include <SPI.h>
-#include <ServoTimer2.h>
+#include <Servo.h>
 
 #include "Ultrasonicsensor.h"
 
@@ -29,7 +29,7 @@ void steer(uint8_t deg);
 void motorPWM(int8_t dutyCycle);
 
 // SoftwareSerial HC12(HC12TX, HC12RX); // Define HC12 communication pins
-ServoTimer2 steeringServo;  // Define servo name
+Servo steeringServo;  // Define servo name
 
 RFM69 radio(RFM69_CS, RFM69_INT);
 
@@ -38,7 +38,7 @@ uint8_t buf[2];
 uint8_t len = sizeof(buf);
 
 void setup() {
-  //Serial.begin(9600);
+  Serial.begin(9600);
   pinMode(MOTORPIN, OUTPUT);
   digitalWrite(MOTORPIN, LOW);
   // Servo-steer
@@ -60,7 +60,7 @@ void setup() {
   delay(10);
 
   if (!radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
-    //Serial.println("RFM69 radio init failed");
+    Serial.println("RFM69 radio init failed");
     while (1)
       ;
   }
@@ -120,7 +120,7 @@ void steer(uint8_t deg) {
     deg = 90;
   }
   //Serial.println(45 + deg);
-  steeringServo.write(map(deg+45, 45, 135, 750, 2250));
+  steeringServo.write(45+deg);
 }
 
 /**
