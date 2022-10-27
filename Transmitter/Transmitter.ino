@@ -16,6 +16,9 @@
 #define MYNODEID 4   // My node ID
 // Arduino pins
 
+//prototypes
+bool sendWithResponse(uint16_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t retries, uint8_t retryWaitTime);
+
 RFM69 radio(RFM69_CS, RFM69_INT);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 uint8_t sensorDistances[3];
@@ -62,6 +65,7 @@ void loop() {
     uint8_t outputMotorSpeed = map(analogRead(A0), 249, 772, 0, 200);
     uint8_t outputSteerAngle = map(analogRead(A1), 248, 775, 0, 90);
     uint8_t buf[2] = {outputMotorSpeed, outputSteerAngle};
+    uint8_t sensorDistances[3] = {0};
 
     if (sendWithResponse(3, buf, 2, 10, 15)) {
         radio.sendACK();
@@ -92,16 +96,6 @@ void loop() {
     display.println(sensorDistances[2]);
 
     display.display();
-}
-bool timeoutReceiver(unsigned long stoptime) {
-    unsigned long time = millis();
-    while (millis() - time < stoptime) {
-        if (radio.receiveDone()) {
-            return true;
-        }
-        yield();
-    }
-    return false;
 }
 
 bool sendWithResponse(uint16_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t retries, uint8_t retryWaitTime) {

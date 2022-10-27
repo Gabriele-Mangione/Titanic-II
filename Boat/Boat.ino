@@ -26,6 +26,7 @@
 // prototypes
 void steer(uint8_t deg);
 void motorPWM(int8_t dutyCycle);
+bool timeoutReceiver(unsigned long stoptime);
 
 // SoftwareSerial HC12(HC12TX, HC12RX); // Define HC12 communication pins
 Servo steeringServo;  // Define servo name
@@ -133,12 +134,5 @@ bool timeoutReceiver(unsigned long stoptime) {
         }
         // yield();
     }
-    /*
-    for(uint16_t i = 0; i<timestotry;i++){
-      if (radio.receiveDone()) {
-        return true;
-      }
-      yield();
-    }*/
     return false;
 }
