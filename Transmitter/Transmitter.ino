@@ -52,10 +52,8 @@ void setup() {
     digitalWrite(RFM69_RST, LOW);
     delay(10);
 
-    if (!radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
+    while (!radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
         Serial.println("RFM69 radio init failed");
-        while (1)
-            ;
     }
     radio.setHighPower();
 }
