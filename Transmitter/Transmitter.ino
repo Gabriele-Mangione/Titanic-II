@@ -3,7 +3,6 @@
 #include <Adafruit_SSD1306.h>
 #include <RFM69.h>
 #include <SPI.h>
-#include <Wire.h>
 
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 64  // OLED display height, in pixels
@@ -19,6 +18,7 @@
 
 RFM69 radio(RFM69_CS, RFM69_INT);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+uint8_t sensorDistances[3];
 
 // HC12 Radio-module pins
 //#define HC12TX 6
@@ -62,9 +62,17 @@ void setup() {
 void loop() {
   uint8_t outputMotorSpeed = map(analogRead(A0), 249, 772, 0, 200);
   uint8_t outputSteerAngle = map(analogRead(A1), 248, 775, 0, 90);
-
   uint8_t buf[2];
-  uint8_t len = sizeof(buf);
+  if (timeoutReceiver(20)) {
+    sensorDistances[0] = radio.DATA[0];
+    sensorDistances[1] = radio.DATA[1];
+    sensorDistances[2] = radio.DATA[2];
+  }
+  Serial.println(analogRead(A0));
+  Serial.println(analogRead(A1));
+  buf[0] = outputMotorSpeed;
+  buf[1] = outputSteerAngle;
+  radio.send(3, buf, 2);
 
   display.clearDisplay();
   display.setCursor(0, 5);
@@ -76,6 +84,14 @@ void loop() {
   display.print(outputSteerAngle + 45);
   display.setCursor(120, 11);
   display.println("o");
+
+  display.setCursor(0, 30);
+  display.print("Distance 0:  ");
+  display.println(sensorDistances[0]);
+  display.print("Distance 1:  ");
+  display.println(sensorDistances[1]);
+  display.print("Distance 2:  ");
+  display.println(sensorDistances[2]);
   /*
     if (timeoutReceiver(100)) {
       if (radio.DATA[0] = 1) {
@@ -87,16 +103,7 @@ void loop() {
         radio.send(3, buf, 2);
       }
     }*/
-  Serial.println(analogRead(A0));
-  Serial.println(analogRead(A1));
-  buf[0] = outputMotorSpeed;
-  buf[1] = outputSteerAngle;
-  radio.send(3, buf, 2);
-  /*if (HC12.available()) {
-      if (HC12.read() == 1) {
-          HC12.print(outputMotorSpeed || outputSteerAngle << 7);
-      }
-  }*/
+
   display.display();
 }
 bool timeoutReceiver(unsigned long stoptime) {

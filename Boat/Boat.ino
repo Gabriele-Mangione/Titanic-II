@@ -34,8 +34,8 @@ Servo steeringServo;  // Define servo name
 RFM69 radio(RFM69_CS, RFM69_INT);
 
 UltrasonicSensorArray DistanceSensors(TRIGGERPIN, ECHOPIN, 3);
-uint8_t buf[2];
-uint8_t len = sizeof(buf);
+uint8_t buf[3];
+  uint16_t distances[3];
 
 void setup() {
   Serial.begin(9600);
@@ -73,20 +73,25 @@ void setup() {
 void loop() {
   uint8_t inputMotorSpeed = 100;
   uint8_t inputSteerAngle = 45;
-  uint16_t distances[3];
 
 
 
   DistanceSensors.getSensorDistance(distances);
+  Serial.print("0: ");
+  Serial.println(distances[0]);
+  Serial.print("1: ");
+  Serial.println(distances[1]);
+  Serial.print("2: ");
+  Serial.println(distances[2]);
+
   /*
-    Serial.println(distances[0]);
-    Serial.println(distances[1]);
-    Serial.println(distances[2]);
-    */
-   /*
-  buf[0] = 1;
-  radio.send(4, buf, sizeof(buf[0]));
-  */
+ buf[0] = 1;
+ */
+buf[0] = distances[0]/100;
+buf[1] = distances[1]/100;
+buf[2] = distances[2]/100;
+ radio.send(4, buf, 3);
+
   if (timeoutReceiver(200)) {
     inputMotorSpeed = radio.DATA[0];
     inputSteerAngle = radio.DATA[1];
@@ -120,7 +125,7 @@ void steer(uint8_t deg) {
     deg = 90;
   }
   //Serial.println(45 + deg);
-  steeringServo.write(45+deg);
+  steeringServo.write(45 + deg);
 }
 
 /**
@@ -134,13 +139,16 @@ void motorPWM(int8_t dutyCycle) {
   if (dutyCycle < 0) {
     dutyCycle = 0;
   }
+  if(distances[0] < 100 ||distances[1] < 100 ||distances[2] < 100 ){
+    dutyCycle /= 10;
+  }
   //Serial.print("PWM = ");
   //Serial.print(dutyCycle);
-  analogWrite(MOTORPIN, double(dutyCycle * 10.24));
+  analogWrite(MOTORPIN, dutyCycle * 10.24);
 }
 
 bool timeoutReceiver(unsigned long stoptime) {
-  
+
   unsigned long time = millis();
   while (millis() - time < stoptime) {
     if (radio.receiveDone()) {
