@@ -46,7 +46,7 @@ void setup() {
 
     digitalWrite(MOTORPIN, LOW);
     digitalWrite(RFM69_RST, LOW);
-    
+
     // Servo-steer
     steeringServo.attach(SERVOPIN);
     steeringServo.write(90);
@@ -71,19 +71,19 @@ void loop() {
     uint8_t inputSteerAngle = 45;
 
     DistanceSensors.getSensorDistance(distances);
-    Serial.print("0: ");
+    /*Serial.print("0: ");
     Serial.println(distances[0]);
     Serial.print("1: ");
     Serial.println(distances[1]);
     Serial.print("2: ");
-    Serial.println(distances[2]);
+    Serial.println(distances[2]);*/
 
     buf[0] = distances[0] / 100;
     buf[1] = distances[1] / 100;
     buf[2] = distances[2] / 100;
-    radio.send(4, buf, 3);
 
     if (timeoutReceiver(200)) {
+        radio.sendWithRetry(4, buf, 3, 2, 10);
         inputMotorSpeed = radio.DATA[0];
         inputSteerAngle = radio.DATA[1];
     } else {
