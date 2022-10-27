@@ -2,7 +2,6 @@
 #include <RFM69.h>
 #include <SPI.h>
 #include <Servo.h>
-
 #include <Ultrasonicsensor.h>
 
 // Arduino pins
