@@ -83,7 +83,7 @@ void loop() {
     buf[2] = distances[2] / 100;
 
     if (timeoutReceiver(200)) {
-        radio.sendWithRetry(4, buf, 3, 2, 10);
+        radio.sendWithRetry(4, buf, 3, 2, 15);
         inputMotorSpeed = radio.DATA[0];
         inputSteerAngle = radio.DATA[1];
     } else {

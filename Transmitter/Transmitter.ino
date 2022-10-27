@@ -24,7 +24,6 @@ uint8_t sensorDistances[3];
 //#define HC12TX 6
 //#define HC12RX 5
 
-uint8_t buf[2];
 // SoftwareSerial HC12(HC12TX, HC12RX); // Define HC12 communication pins
 
 void setup() {
@@ -64,8 +63,7 @@ void setup() {
 void loop() {
     uint8_t outputMotorSpeed = map(analogRead(A0), 249, 772, 0, 200);
     uint8_t outputSteerAngle = map(analogRead(A1), 248, 775, 0, 90);
-    buf[0] = outputMotorSpeed;
-    buf[1] = outputSteerAngle;
+    uint8_t buf[2] = {outputMotorSpeed, outputSteerAngle};
 
     if (sendWithResponse(3, buf, 2, 10, 15)) {
         radio.sendACK();
@@ -94,17 +92,6 @@ void loop() {
     display.println(sensorDistances[1]);
     display.print("Distance 2:  ");
     display.println(sensorDistances[2]);
-    /*
-      if (timeoutReceiver(100)) {
-        if (radio.DATA[0] = 1) {
-          Serial.println("success");
-          Serial.println(analogRead(A0));
-          Serial.println(analogRead(A1));
-          buf[0] = outputMotorSpeed;
-          buf[1] = outputSteerAngle;
-          radio.send(3, buf, 2);
-        }
-      }*/
 
     display.display();
 }
@@ -120,15 +107,13 @@ bool timeoutReceiver(unsigned long stoptime) {
 }
 
 bool sendWithResponse(uint16_t toAddress, const void* buffer, uint8_t bufferSize, uint8_t retries, uint8_t retryWaitTime) {
-  uint32_t sentTime;
-  for (uint8_t i = 0; i <= retries; i++)
-  {
-    radio.send(toAddress, buffer, bufferSize, true);
-    sentTime = millis();
-    while (millis() - sentTime < retryWaitTime)
-    {
-      if (radio.receiveDone()) return true;
+    uint32_t sentTime;
+    for (uint8_t i = 0; i <= retries; i++) {
+        radio.send(toAddress, buffer, bufferSize, true);
+        sentTime = millis();
+        while (millis() - sentTime < retryWaitTime) {
+            if (radio.receiveDone()) return true;
+        }
     }
-  }
-  return false;
+    return false;
 }
