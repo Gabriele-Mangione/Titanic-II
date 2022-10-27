@@ -38,16 +38,18 @@ uint16_t distances[3];
 
 void setup() {
     Serial.begin(9600);
-    pinMode(MOTORPIN, OUTPUT);
-    digitalWrite(MOTORPIN, LOW);
-    // Servo-steer
-    steeringServo.attach(SERVOPIN);
-    steeringServo.write(90);
 
+    pinMode(MOTORPIN, OUTPUT);
     pinMode(TRIGGERPIN, OUTPUT);
     pinMode(ECHOPIN, INPUT);
     pinMode(RFM69_RST, OUTPUT);
+
+    digitalWrite(MOTORPIN, LOW);
     digitalWrite(RFM69_RST, LOW);
+    
+    // Servo-steer
+    steeringServo.attach(SERVOPIN);
+    steeringServo.write(90);
 
     // Serial.println("RFM69 TX Test!");
     // Serial.println();
@@ -58,17 +60,12 @@ void setup() {
     digitalWrite(RFM69_RST, LOW);
     delay(10);
 
-    if (!radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
+    while (!radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
         Serial.println("RFM69 radio init failed");
-        while (1)
-            ;
     }
     radio.setHighPower();
-    /*
-      uint8_t key[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                       0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-      radio.setEncryptionKey(key);*/
 }
+
 void loop() {
     uint8_t inputMotorSpeed = 100;
     uint8_t inputSteerAngle = 45;
@@ -81,9 +78,6 @@ void loop() {
     Serial.print("2: ");
     Serial.println(distances[2]);
 
-    /*
-   buf[0] = 1;
-   */
     buf[0] = distances[0] / 100;
     buf[1] = distances[1] / 100;
     buf[2] = distances[2] / 100;
@@ -95,20 +89,8 @@ void loop() {
     } else {
         // Serial.print("error-Timeout");
     }
-
-    /*HC12.print("1"); // signals the controller that the car is ready to receive
-    if (HC12.available())
-    {
-      Serial.println("reading");
-      int inputHC12 = HC12.read();
-      inputMotorSpeed = inputHC12 & 0x007F;
-      inputSteerAngle = (inputHC12 & 0x3F80) >> 7;
-      Serial.println(inputHC12);
-    }*/
-    // Serial.println("writing");
     motorPWM(inputMotorSpeed);
     steer(inputSteerAngle);
-    // Serial.print("\n\n\n\n");
 }
 
 /**
