@@ -67,7 +67,7 @@ void loop() {
     uint8_t buf[2] = {outputMotorSpeed, outputSteerAngle};
     uint8_t sensorDistances[3] = {0};
 
-    if (sendWithResponse(3, buf, 2, 10, 15)) {
+    if (sendWithResponse(3, buf, 2, 10, 20)) {
         radio.sendACK();
         sensorDistances[0] = radio.DATA[0];
         sensorDistances[1] = radio.DATA[1];
