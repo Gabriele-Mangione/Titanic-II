@@ -21,35 +21,19 @@ bool sendWithResponse(uint16_t toAddress, const void* buffer, uint8_t bufferSize
 
 RFM69 radio(RFM69_CS, RFM69_INT);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-uint8_t sensorDistances[3];
-
-// HC12 Radio-module pins
-//#define HC12TX 6
-//#define HC12RX 5
-
-// SoftwareSerial HC12(HC12TX, HC12RX); // Define HC12 communication pins
 
 void setup() {
-    Serial.begin(9600);
-    // HC12-Radiomodule
-    // HC12.begin(9600);
-    pinMode(RFM69_RST, OUTPUT);
-    digitalWrite(RFM69_RST, LOW);
+    //Serial.begin(9600);
 
-    if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    while(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
         Serial.println("SSD1306 allocation failed");
-        for (;;)
-            ;  // Don't proceed, loop forever
     }
     delay(1000);
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(1);
 
-    Serial.println("RFM69 TX Test!");
-    Serial.println();
-
-    // manual reset
+    // RFM69 Radio init
     digitalWrite(RFM69_RST, HIGH);
     delay(10);
     digitalWrite(RFM69_RST, LOW);
@@ -73,8 +57,6 @@ void loop() {
         sensorDistances[1] = radio.DATA[1];
         sensorDistances[2] = radio.DATA[2];
     }
-    /*Serial.println(analogRead(A0));
-    Serial.println(analogRead(A1));*/
 
     display.clearDisplay();
     display.setCursor(0, 5);
@@ -87,7 +69,7 @@ void loop() {
     display.setCursor(120, 11);
     display.println("o");
 
-    display.setCursor(0, 30);
+    display.setCursor(0, 32);
     display.print("Distance 0:  ");
     display.println(sensorDistances[0]);
     display.print("Distance 1:  ");

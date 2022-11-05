@@ -23,6 +23,7 @@
 
 #define NETWORKID 0  // Must be the same for all nodes
 #define MYNODEID 3   // My node ID
+#define MAX_DISTANCE 500
 
 // prototypes
 void steer(uint8_t deg);
@@ -36,8 +37,6 @@ Servo waterPistol;
 RFM69 radio(RFM69_CS, RFM69_INT);
 
 UltrasonicSensorArray DistanceSensors(TRIGGERPIN, ECHOPIN, 3);
-uint8_t buf[3];
-uint16_t distances[3];
 
 void setup() {
   Serial.begin(9600);
@@ -74,20 +73,19 @@ void loop() {
   uint8_t inputMotorSpeed = 100;
   uint8_t inputSteerAngle = 45;
 
-  DistanceSensors.getSensorDistance(distances);
-  /*Serial.print("0: ");
-  Serial.println(distances[0]);
-  Serial.print("1: ");
-  Serial.println(distances[1]);
-  Serial.print("2: ");
-  Serial.println(distances[2]);*/
+    uint16_t distances[3];
+    DistanceSensors.getSensorDistance(distances);
 
-  buf[0] = distances[0] / 100;
-  buf[1] = distances[1] / 100;
-  buf[2] = distances[2] / 100;
+    if(distances[0] < MAX_DISTANCE || distances[1] < MAX_DISTANCE || distances[2] < MAX_DISTANCE ){
+        inputMotorSpeed /= 5;
+    }
+
+    distances[0] /= 100;
+    distances[1] /= 100;
+    distances[2] /= 100;
 
   if (timeoutReceiver(200)) {
-    radio.sendWithRetry(4, buf, 3, 2, 15);
+    radio.sendWithRetry(4, distances, 3, 2, 15);
     inputMotorSpeed = radio.DATA[0];
     inputSteerAngle = radio.DATA[1];
   } else {
@@ -107,31 +105,24 @@ void loop() {
  *  steer from 60° to 120°
  */
 void steer(uint8_t deg) {
-  // Serial.print("steer = ");
-  if (deg > 90) {
-    deg = 90;
-  }
-  // Serial.println(45 + deg);
-  steeringServo.write(45 + deg);
+    if (deg > 90) {
+        deg = 90;
+    }
+    steeringServo.write(45 + deg);
 }
 
 /**
  *    0% to 100%
  */
 void motorPWM(int8_t dutyCycle) {
-  dutyCycle = dutyCycle - 100;
-  if (dutyCycle > 100) {
-    dutyCycle = 100;
-  }
-  if (dutyCycle < 0) {
-    dutyCycle = 0;
-  }
-  if (distances[0] < 100 || distances[1] < 100 || distances[2] < 100) {
-    dutyCycle /= 10;
-  }
-  // Serial.print("PWM = ");
-  // Serial.print(dutyCycle);
-  analogWrite(MOTORPIN, dutyCycle * 10.24);
+    dutyCycle = dutyCycle - 100;
+    if (dutyCycle > 100) {
+        dutyCycle = 100;
+    }
+    if (dutyCycle < 0) {
+        dutyCycle = 0;
+    }
+    analogWrite(MOTORPIN, dutyCycle * 10.24);
 }
 
 bool timeoutReceiver(unsigned long stoptime) {
