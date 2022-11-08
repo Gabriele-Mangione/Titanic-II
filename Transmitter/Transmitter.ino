@@ -23,9 +23,11 @@ RFM69 radio(RFM69_CS, RFM69_INT);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 void setup() {
-    //Serial.begin(9600);
+    Serial.begin(9600);
+    pinMode(RFM69_RST, OUTPUT);
+    digitalWrite(RFM69_RST, LOW);
 
-    while(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    while (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
         Serial.println("SSD1306 allocation failed");
     }
     delay(1000);
@@ -48,8 +50,8 @@ void setup() {
 void loop() {
     uint8_t outputMotorSpeed = map(analogRead(A0), 249, 772, 0, 200);
     uint8_t outputSteerAngle = map(analogRead(A1), 248, 775, 0, 90);
-    uint8_t buf[2] = {outputMotorSpeed, outputSteerAngle};
-    uint8_t sensorDistances[3] = {0};
+    uint8_t buf[2] = { outputMotorSpeed, outputSteerAngle };
+    uint8_t sensorDistances[3] = { 0 };
 
     if (sendWithResponse(3, buf, 2, 10, 20)) {
         radio.sendACK();

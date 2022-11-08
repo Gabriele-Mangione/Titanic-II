@@ -10,9 +10,9 @@
 //#define HC12RX 5
 
 // Servo pinsP
-#define SERVOPIN 5
+#define SERVOPIN 2
 #define WATERPISTOLPIN 6
-#define MOTORPIN 2
+#define MOTORPIN 5
 
 #define RFM69_RST 9
 #define RFM69_CS 10
@@ -73,29 +73,31 @@ void loop() {
   uint8_t inputMotorSpeed = 100;
   uint8_t inputSteerAngle = 45;
 
-    uint16_t distances[3];
-    DistanceSensors.getSensorDistance(distances);
+  uint16_t distances[3];
+  DistanceSensors.getSensorDistance(distances);
 
-    if(distances[0] < MAX_DISTANCE || distances[1] < MAX_DISTANCE || distances[2] < MAX_DISTANCE ){
-        inputMotorSpeed /= 5;
-    }
+  if (distances[0] < MAX_DISTANCE || distances[1] < MAX_DISTANCE || distances[2] < MAX_DISTANCE) {
+    inputMotorSpeed /= 5;
+  }
 
-    distances[0] /= 100;
-    distances[1] /= 100;
-    distances[2] /= 100;
+  distances[0] /= 100;
+  distances[1] /= 100;
+  distances[2] /= 100;
 
-  if (timeoutReceiver(200)) {
-    radio.sendWithRetry(4, distances, 3, 2, 15);
+  if (timeoutReceiver(1000)) {
+    radio.sendWithRetry(4, distances, 3, 2, 20);
     inputMotorSpeed = radio.DATA[0];
     inputSteerAngle = radio.DATA[1];
-  } else {
-    // Serial.print("error-Timeout");
+  }
+  else {
+     Serial.print("error-Timeout");
   }
   motorPWM(inputMotorSpeed);
   steer(inputSteerAngle);
   if (inputSteerAngle > 100) {
     waterPistol.write(40);
-  } else {
+  }
+  else {
     waterPistol.write(0);
   }
 }
@@ -105,24 +107,24 @@ void loop() {
  *  steer from 60° to 120°
  */
 void steer(uint8_t deg) {
-    if (deg > 90) {
-        deg = 90;
-    }
-    steeringServo.write(45 + deg);
+  if (deg > 90) {
+    deg = 90;
+  }
+  steeringServo.write(45 + deg);
 }
 
 /**
  *    0% to 100%
  */
 void motorPWM(int8_t dutyCycle) {
-    dutyCycle = dutyCycle - 100;
-    if (dutyCycle > 100) {
-        dutyCycle = 100;
-    }
-    if (dutyCycle < 0) {
-        dutyCycle = 0;
-    }
-    analogWrite(MOTORPIN, dutyCycle * 10.24);
+  dutyCycle = dutyCycle - 100;
+  if (dutyCycle > 100) {
+    dutyCycle = 100;
+  }
+  if (dutyCycle < 0) {
+    dutyCycle = 0;
+  }
+  analogWrite(MOTORPIN, dutyCycle * 10.24);
 }
 
 bool timeoutReceiver(unsigned long stoptime) {
