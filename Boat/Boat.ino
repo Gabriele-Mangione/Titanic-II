@@ -117,13 +117,13 @@ void steer(uint8_t deg) {
  *    0% to 100%
  */
 void motorPWM(int8_t dutyCycle) {
-  dutyCycle = dutyCycle - 100;
-  if (dutyCycle > 100) {
+  if (dutyCycle > 200) {
+    dutyCycle = 200;
+  }
+  if (dutyCycle < 100) {
     dutyCycle = 100;
   }
-  if (dutyCycle < 0) {
-    dutyCycle = 0;
-  }
+  dutyCycle = dutyCycle - 100;
   analogWrite(MOTORPIN, dutyCycle * 10.24);
 }
 
