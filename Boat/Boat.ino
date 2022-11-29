@@ -90,14 +90,14 @@ void loop() {
     inputSteerAngle = radio.DATA[1];
   }
   else {
-     Serial.print("error-Timeout");
+    Serial.print("error-Timeout");
   }
   motorPWM(inputMotorSpeed);
-  steer(inputSteerAngle);
   if (inputSteerAngle > 100) {
     waterPistol.write(40);
   }
   else {
+    steer(inputSteerAngle);
     waterPistol.write(0);
   }
 }
@@ -124,7 +124,7 @@ void motorPWM(int8_t dutyCycle) {
     dutyCycle = 100;
   }
   dutyCycle = dutyCycle - 100;
-  analogWrite(MOTORPIN, dutyCycle * 10.24);
+  analogWrite(MOTORPIN, dutyCycle * 2.55);
 }
 
 bool timeoutReceiver(unsigned long stoptime) {
