@@ -1,5 +1,5 @@
 
-#include <RFM69.h>
+#include <RadioLib.h>
 #include <SPI.h>
 #include <Servo.h>
 #include <Ultrasonicsensor.h>
@@ -28,112 +28,95 @@
 // prototypes
 void steer(uint8_t deg);
 void motorPWM(int8_t dutyCycle);
-bool timeoutReceiver(unsigned long stoptime);
 
 // SoftwareSerial HC12(HC12TX, HC12RX); // Define HC12 communication pins
 Servo steeringServo;  // Define servo name
 Servo waterPistol;
 
-RFM69 radio(RFM69_CS, RFM69_INT);
+RFM69 Radio(RFM69_CS, RFM69_INT);
 
 UltrasonicSensorArray DistanceSensors(TRIGGERPIN, ECHOPIN, 3);
 
+bool slowMode = false;
+uint16_t distances[3];
+
 void setup() {
-  Serial.begin(9600);
+    Serial.begin(9600);
 
-  pinMode(MOTORPIN, OUTPUT);
-  pinMode(TRIGGERPIN, OUTPUT);
-  pinMode(ECHOPIN, INPUT);
-  pinMode(RFM69_RST, OUTPUT);
+    pinMode(MOTORPIN, OUTPUT);
+    pinMode(TRIGGERPIN, OUTPUT);
+    pinMode(ECHOPIN, INPUT);
+    pinMode(RFM69_RST, OUTPUT);
 
-  digitalWrite(MOTORPIN, LOW);
-  digitalWrite(RFM69_RST, LOW);
+    digitalWrite(MOTORPIN, LOW);
+    digitalWrite(RFM69_RST, LOW);
 
-  // Servo-steer
-  waterPistol.attach(WATERPISTOLPIN);
-  steeringServo.attach(SERVOPIN);
-  steeringServo.write(90);
+    // Servo-steer
+    waterPistol.attach(WATERPISTOLPIN);
+    steeringServo.attach(SERVOPIN);
+    steeringServo.write(90);
 
-  // Serial.println("RFM69 TX Test!");
-  // Serial.println();
+    // Serial.println("RFM69 TX Test!");
+    // Serial.println();
 
-  // manual reset
-  digitalWrite(RFM69_RST, HIGH);
-  delay(10);
-  digitalWrite(RFM69_RST, LOW);
-  delay(10);
+    // manual reset
+    digitalWrite(RFM69_RST, HIGH);
+    delay(10);
+    digitalWrite(RFM69_RST, LOW);
+    delay(10);
 
-  while (!radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
-    Serial.println("RFM69 radio init failed");
-  }
-  radio.setHighPower();
+    while (!Radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
+        Serial.println("RFM69 radio init failed");
+    }
+    Radio.setHighPower();
+    Radio.setIsrCallback(myCallback);
 }
 
 void loop() {
-  uint8_t inputMotorSpeed = 100;
-  uint8_t inputSteerAngle = 45;
+    if (millis() - Radio.timer > 3000) {
+        motorPWM(100);
+    }
 
-  uint16_t distances[3];
-  DistanceSensors.getSensorDistance(distances);
+    DistanceSensors.getSensorDistancemm(distances);
 
-  if (distances[0] < MAX_DISTANCE || distances[1] < MAX_DISTANCE || distances[2] < MAX_DISTANCE) {
-    inputMotorSpeed /= 5;
-  }
+    if (distances[0] < MAX_DISTANCE || distances[1] < MAX_DISTANCE || distances[2] < MAX_DISTANCE) {
+        slowMode = true;
+    }
+}
 
-  distances[0] /= 100;
-  distances[1] /= 100;
-  distances[2] /= 100;
-
-  if (timeoutReceiver(1000)) {
-    radio.sendWithRetry(4, distances, 3, 2, 20);
-    inputMotorSpeed = radio.DATA[0];
-    inputSteerAngle = radio.DATA[1];
-  }
-  else {
-    Serial.print("error-Timeout");
-  }
-  motorPWM(inputMotorSpeed);
-  if (inputSteerAngle > 100) {
-    waterPistol.write(40);
-  }
-  else {
-    steer(inputSteerAngle);
-    waterPistol.write(0);
-  }
+void myCallback() {
+    Serial.write("Callback called");
+    motorPWM(Radio.DATA[0] - 100);
+    if (Radio.DATA[1] > 100) {
+        waterPistol.write(40);
+    } else {
+        steer(Radio.DATA[1]);
+        waterPistol.write(0);
+    }
+    Radio.sendFrame(3, distances, 3);
+    Radio.setMode(RF69_MODE_RX);
 }
 
 /**
- *  in Degrees°, 0 - 60
- *  steer from 60° to 120°
+ *  in Degrees°, 0 - 90
  */
 void steer(uint8_t deg) {
-  if (deg > 90) {
-    deg = 90;
-  }
-  steeringServo.write(45 + deg);
+    if (deg > 90) {
+        deg = 90;
+    }
+    steeringServo.write(45 + deg);
 }
 
 /**
  *    0% to 100%
  */
 void motorPWM(int8_t dutyCycle) {
-  if (dutyCycle > 200) {
-    dutyCycle = 200;
-  }
-  if (dutyCycle < 100) {
-    dutyCycle = 100;
-  }
-  dutyCycle = dutyCycle - 100;
-  analogWrite(MOTORPIN, dutyCycle * 2.55);
-}
-
-bool timeoutReceiver(unsigned long stoptime) {
-  unsigned long time = millis();
-  while (millis() - time < stoptime) {
-    if (radio.receiveDone()) {
-      return true;
+    if (dutyCycle > 200) {
+        dutyCycle = 200;
     }
-    // yield();
-  }
-  return false;
+    if (dutyCycle < 100) {
+        dutyCycle = 100;
+    }
+    dutyCycle = dutyCycle - 100;
+    analogWrite(MOTORPIN, dutyCycle * 2.55);
 }
