@@ -4,6 +4,8 @@
 #include <Servo.h>
 #include <Ultrasonicsensor.h>
 
+#include "generalDefines.h"
+
 // Arduino pins
 // HC12 Radio-module pins
 //#define HC12TX 6
@@ -21,9 +23,8 @@
 #define TRIGGERPIN 7
 #define ECHOPIN 8
 
-#define NETWORKID 0  // Must be the same for all nodes
 #define MYNODEID 3   // My node ID
-#define MAX_DISTANCE 500
+#define MIN_DISTANCE 500 //500mm
 
 // prototypes
 void steer(uint8_t deg);
@@ -38,7 +39,7 @@ RFM69 Radio(RFM69_CS, RFM69_INT);
 UltrasonicSensorArray DistanceSensors(TRIGGERPIN, ECHOPIN, 3);
 
 bool slowMode = false;
-uint16_t distances[3];
+uint16_t distances[NUMBER_OF_SENSORS];
 
 void setup() {
     Serial.begin(9600);
@@ -79,7 +80,7 @@ void loop() {
 
     DistanceSensors.getSensorDistancemm(distances);
 
-    if (distances[0] < MAX_DISTANCE || distances[1] < MAX_DISTANCE || distances[2] < MAX_DISTANCE) {
+    if (!checkDistance(distances, MIN_DISTANCE)) {
         slowMode = true;
     }
 }
@@ -119,4 +120,13 @@ void motorPWM(int8_t dutyCycle) {
     }
     dutyCycle = dutyCycle - 100;
     analogWrite(MOTORPIN, dutyCycle * 2.55);
+}
+
+bool checkMinDistance(uint16_t* lengths, uint16_t minLength){
+    for(uint8_t i = 0; i< NUMBER_OF_SENSORS; i++){
+        if(lengths[i]<minLength){
+            return false;
+        }
+    }
+    return true;
 }
