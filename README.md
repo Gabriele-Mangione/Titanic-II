@@ -1,13 +1,13 @@
-# TITANIC II
+# TITANIC II :ship:
 TITANIC II is a project for an RC boat model with paired controller made by me! :grin:
 
 
-## Working principle
+## Working principle :gear:
 
 Both electronics are powered using 14.4V Batteries, use Arduino Nano Every(s) as μController and communicate via LoRa using two RFM69HCW modules.
 The Boat uses a 12V motor to swim and a servo-motor to steer, while the transmitter sends information gathered by a joystick module. 
 
-## Features 
+## Features :bulb:
 The boat is equipped with:
 * A water gun controlled by a servomotor when clicking on the joystick
 * Adjustable PWM motor speed
@@ -19,15 +19,15 @@ The transmitter is equipped with:
 * A tft 128x64 monochrome display to show inputs sent to the boat and boat connection
 * Comfortable 3d-printed case
 
-## Dependencies
+## Dependencies :scroll:
 The codes need the following libraries in order to work.
 
 Boat.ino:
 * RFM69 lib (Lowpowerlab)
 * SPI lib (Arduino)
 * Servo lib (Arduino)
-* Ultrasonicsensor lib (made by me)
-  * you can find this in my GitHub Repositories
+* [Ultrasonicsensor lib (made by me)](https://github.com/Gabriele-Mangione/UltrasonicSensor_lib)
+  * you can find this in [my GitHub Repositories](https://github.com/Gabriele-Mangione?tab=repositories)
 
 Transmitter.ino:
 * GFX lib (Adafruit)
@@ -35,10 +35,10 @@ Transmitter.ino:
 * RFM69 lib (Lowpowerlab)
 * SPI lib (Arduino)
 
-## Contributing
+## Contributing :pencil2:
 
 You are welcome to make commits of suggestions for improvements.
 
-## License
+## License :bookmark_tabs:
 
 [MIT](https://choosealicense.com/licenses/mit/)
