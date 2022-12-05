@@ -1,5 +1,5 @@
 # TITANIC II
-TITANIC II is a project for an RC boat model with paired controller made by me!
+TITANIC II is a project for an RC boat model with paired controller made by me! :grin:
 
 
 ## Working principle
