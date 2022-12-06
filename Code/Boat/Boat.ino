@@ -114,7 +114,9 @@ void steer(uint8_t deg) {
 }
 
 /**
- *    0% to 100%
+ * @brief set speed value for motor using PWM
+ * 
+ * @param dutyCycle 0-200, wh
  */
 void motorPWM(int8_t dutyCycle) {
   if (dutyCycle > 200) {
@@ -127,6 +129,13 @@ void motorPWM(int8_t dutyCycle) {
   analogWrite(MOTORPIN, dutyCycle * 2.55);
 }
 
+/**
+ * @brief check for a certain time if the radio received a new message
+ * 
+ * @param stoptime time in ms of duration 
+ * @return true when a message was received
+ * @return false when stoptime has passed and no message was received
+ */
 bool timeoutReceiver(unsigned long stoptime) {
   unsigned long time = millis();
   while (millis() - time < stoptime) {
