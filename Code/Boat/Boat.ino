@@ -70,17 +70,35 @@ void setup() {
         Serial.println("RFM69 radio init failed");
     }
     Radio.setHighPower();
+
     Radio.setIsrCallback(myCallback);
+    Radio.setMode(RF69_MODE_STANDBY);
 }
+/*
+void myInterruptFunction(){
+        interruptHandler();
+
+    if (_mode == RF69_MODE_RX && PAYLOADLEN > 0)
+    {
+        setMode(RF69_MODE_STANDBY); // enables interrupts
+        return true;
+    }
+    else if (_mode == RF69_MODE_RX) // already in RX no payload yet
+    {
+        return false;
+    }
+    receiveBegin();
+    return false;
+}*/
 
 void loop() {
     if (millis() - Radio.timer > 3000) {
         motorPWM(100);
     }
 
-    DistanceSensors.getSensorDistancemm(distances);
+    DistanceSensors.getSensorDistance(distances);
 
-    if (!checkDistance(distances, MIN_DISTANCE)) {
+    if (!checkMinDistance(distances, MIN_DISTANCE)) {
         slowMode = true;
     }
 }
@@ -94,8 +112,7 @@ void myCallback() {
         steer(Radio.DATA[1]);
         waterPistol.write(0);
     }
-    Radio.sendFrame(3, distances, 3);
-    Radio.setMode(RF69_MODE_RX);
+    //Radio.sendFrame(3, distances, 3);
 }
 
 /**
