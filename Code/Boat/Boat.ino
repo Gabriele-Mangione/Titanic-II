@@ -55,13 +55,13 @@ void setup() {
   SteeringServo.attach(SERVOPIN);
   SteeringServo.write(90);
 
+  //Radio init
   // manual Radio reset
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
   delay(10);
 
-  //Radio init
   while (!Radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
     Serial.println("RFM69 Radio init failed");
   }
