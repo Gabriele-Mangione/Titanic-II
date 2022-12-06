@@ -4,43 +4,44 @@
 #include <Servo.h>
 #include <Ultrasonicsensor.h>
 
-// Arduino pins
-// HC12 Radio-module pins
-//#define HC12TX 6
-//#define HC12RX 5
 
-// Servo pinsP
 #define SERVOPIN 2
 #define WATERPISTOLPIN 6
 #define MOTORPIN 5
 
+//Radio module pins
 #define RFM69_RST 9
 #define RFM69_CS 10
 #define RFM69_INT 3
 
+//Radio IDs
+#define NETWORKID 0  // Must be the same for all nodes
+#define MYNODEID 3   // My node ID
+
+//Ultrasound sensor pins
 #define TRIGGERPIN 7
 #define ECHOPIN 8
 
-#define NETWORKID 0  // Must be the same for all nodes
-#define MYNODEID 3   // My node ID
 #define MAX_DISTANCE 500
+
 
 // prototypes
 void steer(uint8_t deg);
 void motorPWM(int8_t dutyCycle);
 bool timeoutReceiver(unsigned long stoptime);
 
-// SoftwareSerial HC12(HC12TX, HC12RX); // Define HC12 communication pins
-Servo steeringServo;  // Define servo name
-Servo waterPistol;
+Servo SteeringServo;
+Servo WaterPistol;
 
-RFM69 radio(RFM69_CS, RFM69_INT);
+RFM69 Radio(RFM69_CS, RFM69_INT);
 
 UltrasonicSensorArray DistanceSensors(TRIGGERPIN, ECHOPIN, 3);
 
 void setup() {
-  Serial.begin(9600);
+  //for testing
+  //Serial.begin(9600);
 
+  //set pin modes
   pinMode(MOTORPIN, OUTPUT);
   pinMode(TRIGGERPIN, OUTPUT);
   pinMode(ECHOPIN, INPUT);
@@ -49,33 +50,33 @@ void setup() {
   digitalWrite(MOTORPIN, LOW);
   digitalWrite(RFM69_RST, LOW);
 
-  // Servo-steer
-  waterPistol.attach(WATERPISTOLPIN);
-  steeringServo.attach(SERVOPIN);
-  steeringServo.write(90);
+  //Assign servo pins to servo objects
+  WaterPistol.attach(WATERPISTOLPIN);
+  SteeringServo.attach(SERVOPIN);
+  SteeringServo.write(90);
 
-  // Serial.println("RFM69 TX Test!");
-  // Serial.println();
-
-  // manual reset
+  // manual Radio reset
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
   delay(10);
 
-  while (!radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
-    Serial.println("RFM69 radio init failed");
+  //Radio init
+  while (!Radio.initialize(RF69_915MHZ, MYNODEID, NETWORKID)) {
+    Serial.println("RFM69 Radio init failed");
   }
-  radio.setHighPower();
+  Radio.setHighPower();
 }
 
 void loop() {
+  //standard values, in case no inputs are received from radio
   uint8_t inputMotorSpeed = 100;
   uint8_t inputSteerAngle = 45;
 
   uint16_t distances[3];
   DistanceSensors.getSensorDistance(distances);
 
+  //if an object within 500mm is detected
   if (distances[0] < MAX_DISTANCE || distances[1] < MAX_DISTANCE || distances[2] < MAX_DISTANCE) {
     inputMotorSpeed /= 5;
   }
@@ -83,22 +84,23 @@ void loop() {
   distances[0] /= 100;
   distances[1] /= 100;
   distances[2] /= 100;
+  //if signal is received
+  if (Radio.receiveDone()) {
+    //send distances to transmitter
+    Radio.sendWithRetry(4, distances, 3, 2, 20);
+    //overwrite standard values with read values
+    inputMotorSpeed = Radio.DATA[0];
+    inputSteerAngle = Radio.DATA[1];
+  }
 
-  if (timeoutReceiver(1000)) {
-    radio.sendWithRetry(4, distances, 3, 2, 20);
-    inputMotorSpeed = radio.DATA[0];
-    inputSteerAngle = radio.DATA[1];
-  }
-  else {
-    Serial.print("error-Timeout");
-  }
   motorPWM(inputMotorSpeed);
+  //if a click on the joystick is detected
   if (inputSteerAngle > 100) {
-    waterPistol.write(40);
+    WaterPistol.write(40); //spray watergun
   }
   else {
     steer(inputSteerAngle);
-    waterPistol.write(0);
+    WaterPistol.write(0); //reset watergun
   }
 }
 
@@ -106,17 +108,22 @@ void loop() {
  *  in Degrees°, 0 - 60
  *  steer from 60° to 120°
  */
+/**
+ * @brief steer in angle "deg"
+ * 
+ * @param deg degrees 0-90, where 45 is forward
+*/
 void steer(uint8_t deg) {
   if (deg > 90) {
     deg = 90;
   }
-  steeringServo.write(45 + deg);
+  SteeringServo.write(45 + deg);
 }
 
 /**
  * @brief set speed value for motor using PWM
  * 
- * @param dutyCycle 0-200, wh
+ * @param dutyCycle 0-200, where 0 is full backwards power, 100 is no movement and 200 is full forwards power
  */
 void motorPWM(int8_t dutyCycle) {
   if (dutyCycle > 200) {
@@ -128,21 +135,21 @@ void motorPWM(int8_t dutyCycle) {
   dutyCycle = dutyCycle - 100;
   analogWrite(MOTORPIN, dutyCycle * 2.55);
 }
-
 /**
- * @brief check for a certain time if the radio received a new message
+ * @brief check for a certain time if the Radio received a new message
  * 
  * @param stoptime time in ms of duration 
  * @return true when a message was received
  * @return false when stoptime has passed and no message was received
- */
+ *
 bool timeoutReceiver(unsigned long stoptime) {
   unsigned long time = millis();
   while (millis() - time < stoptime) {
-    if (radio.receiveDone()) {
+    if (Radio.receiveDone()) {
       return true;
     }
     // yield();
   }
   return false;
 }
+*/
