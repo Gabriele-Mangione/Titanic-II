@@ -4,20 +4,17 @@
 #include <RadioLib.h>
 #include <SPI.h>
 
-#include "generalDefines.h"
-#include "RFM69registers.h"
-
-// Display defines
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 64  // OLED display height, in pixels
 #define SCREEN_ADDRESS 0x3D
 #define OLED_RESET -1
 
-// RFM69 defines
+//Radio module pins
 #define RFM69_RST 9
 #define RFM69_CS 10
 #define RFM69_INT 3
 
+//Radio IDs
 #define MYNODEID 4   // My node ID
 
 RFM69 Radio(RFM69_CS, RFM69_INT);
