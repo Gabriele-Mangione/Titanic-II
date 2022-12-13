@@ -461,17 +461,14 @@ void RFM69::interruptHandler() {
 
 // internal function
 ISR_PREFIX void RFM69::isr0() {
-    Serial.println("interruptcalled");
-    _instance->interruptHandler();
-    if (PAYLOADLEN > 0) {
-        _instance->setMode(RF69_MODE_STANDBY);
-    }else{
-        _instance->receiveBegin();
-    }
     _haveData = true;
-    
-    if (_instance->_isrCallback)
+    Serial.println("interruptcalled");
+    while (!_instance->receiveDone()) {
+        Serial.print("whaaat");
+    };
+    if (_instance->_isrCallback) {
         _instance->_isrCallback();
+    }
     /*
     _instance->setMode(RF69_MODE_STANDBY);
     _instance->select();
@@ -996,9 +993,9 @@ void RFM69::readAllRegs()
 
         default: {
         }
-    }
+        }
 #endif
-}
+    }
     unselect();
 }
 

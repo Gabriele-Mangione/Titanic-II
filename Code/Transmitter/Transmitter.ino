@@ -37,7 +37,6 @@ void setup() {
     }
     Radio.setHighPower();
     Radio.setIsrCallback(myCallback);  // set myCallback() function to call in the interrupt function of the radio library
-    Radio.setMode(RF69_MODE_RX);
 
     // display setup
     while (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
