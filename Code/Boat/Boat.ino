@@ -62,7 +62,7 @@ void setup() {
 
   //Assign servo pins to servo objects
   //WaterPistol.attach(WATERPISTOLPIN, 0, 40);
-  SteeringServo.attach(SERVOPIN, 45, 135);
+  SteeringServo.attach(SERVOPIN);
   SteeringServo.write(90);
   //WaterPistol.write(0);
 
