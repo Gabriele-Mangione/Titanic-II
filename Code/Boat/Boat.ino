@@ -23,8 +23,14 @@
 #define TRIGGERPIN 7
 #define ECHOPIN 8
 
-#define MAX_DISTANCE 500
+#define MIN_DISTANCE 500
 
+#ifndef __XMEGA__
+#define UCSR0A USART1_STATUS
+#define UDR0 USART1_RXDATAL
+#define FE0 USART_FERR_bp
+#define USART_RX_vect USART1_RXC_vect
+#endif
 
 // prototypes
 void steer(uint8_t deg);
@@ -42,21 +48,23 @@ uint16_t distances[NUMBER_OF_SENSORS];
 
 void setup() {
   //for testing
-  //Serial.begin(9600);
+  Serial.begin(9600);
 
   //set pin modes
   pinMode(MOTORPIN, OUTPUT);
   pinMode(TRIGGERPIN, OUTPUT);
   pinMode(ECHOPIN, INPUT);
   pinMode(RFM69_RST, OUTPUT);
+  pinMode(RFM69_INT, INPUT_PULLUP);
 
     digitalWrite(MOTORPIN, LOW);
     digitalWrite(RFM69_RST, LOW);
 
   //Assign servo pins to servo objects
-  WaterPistol.attach(WATERPISTOLPIN);
-  SteeringServo.attach(SERVOPIN);
+  //WaterPistol.attach(WATERPISTOLPIN, 0, 40);
+  SteeringServo.attach(SERVOPIN, 45, 135);
   SteeringServo.write(90);
+  //WaterPistol.write(0);
 
   //Radio init
   // manual Radio reset
@@ -71,7 +79,9 @@ void setup() {
     Radio.setHighPower();
 
     Radio.setIsrCallback(myCallback);
+    Radio.setIrq(RFM69_INT);
     Radio.setMode(RF69_MODE_STANDBY);
+    Radio.receiveDone();
 }
 /*
 void myInterruptFunction(){
@@ -97,19 +107,20 @@ void loop() {
 
     DistanceSensors.getSensorDistance(distances);
 
-    if (!checkMinDistance(distances, MIN_DISTANCE)) {
+    if (!checkMinDistance(distances,NUMBER_OF_SENSORS, MIN_DISTANCE)) {
         slowMode = true;
     }
+    Serial.println(SteeringServo.read());
 }
 
 void myCallback() {
-    Serial.write("Callback called");
+    //Serial.write("Callback called");
     motorPWM(Radio.DATA[0] - 100);
     if (Radio.DATA[1] > 100) {
-        waterPistol.write(40);
+        WaterPistol.write(40);
     } else {
         steer(Radio.DATA[1]);
-        waterPistol.write(0);
+        WaterPistol.write(0);
     }
     //Radio.sendFrame(3, distances, 3);
 }
@@ -142,7 +153,7 @@ void motorPWM(int8_t dutyCycle) {
         dutyCycle = 100;
     }
     dutyCycle = dutyCycle - 100;
-    analogWrite(MOTORPIN, dutyCycle * 2.55);
+    analogWrite(MOTORPIN, dutyCycle * 2.54);
 }
 /**
  * @brief check for a certain time if the Radio received a new message
@@ -160,3 +171,12 @@ bool timeoutReceiver(unsigned long stoptime) {
     return true;
 }
 */
+
+bool checkMinDistance(uint16_t *distances,uint8_t numOfDistances, uint8_t minDistance){
+  for(uint8_t i = 0; i> numOfDistances; i++){
+    if(distances[i]<minDistance){
+      return true;
+    }
+  }
+  return false;
+};
